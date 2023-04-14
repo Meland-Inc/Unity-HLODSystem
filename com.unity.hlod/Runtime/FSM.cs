@@ -11,7 +11,7 @@ namespace Unity.HLODSystem
         private T m_currentState = default;
         private T m_lastState = default;
         private T m_transactionTargetState = default;
-        
+
         //event ordering
         //exiting -> entering -> exited -> entered
         class Functions
@@ -39,16 +39,16 @@ namespace Unity.HLODSystem
                     return;
                 if (GetFunctions(m_transactionTargetState).IsReadyToEnterFunction?.Invoke() == false)
                     return;
-                
+
                 //the transaction has been finished.
                 GetFunctions(m_currentState).ExitedFunction?.Invoke();
                 GetFunctions(m_transactionTargetState).EnteredFunction?.Invoke();
 
                 m_currentState = m_transactionTargetState;
             }
-            
+
             Debug.Assert(Compare(m_currentState, m_transactionTargetState));
-            
+
             //Here the transaction is always complete.
             //We have to check to start a new transaction.
             if (Compare(m_currentState, m_lastState) == false)
@@ -62,7 +62,7 @@ namespace Unity.HLODSystem
             m_lastState = state;
             if (Compare(m_currentState, m_lastState))
                 return;
-            
+
             //it means, completed the last transaction. we should do it immediately. 
             if (Compare(m_currentState, m_transactionTargetState))
             {
@@ -120,10 +120,10 @@ namespace Unity.HLODSystem
         {
             GetFunctions(state).ExitedFunction = null;
         }
-        
+
         private Functions GetFunctions(T state)
         {
-            if ( m_functions.ContainsKey(state) == false )
+            if (m_functions.ContainsKey(state) == false)
                 m_functions.Add(state, new Functions());
 
             return m_functions[state];
@@ -132,12 +132,12 @@ namespace Unity.HLODSystem
         private void StartTransaction(T current, T target)
         {
             m_transactionTargetState = target;
-            
+
             GetFunctions(current).ExitingFunction?.Invoke();
             GetFunctions(target).EnteringFunction?.Invoke();
         }
 
-        private static bool Compare(T lhs, T rhs)
+        protected virtual bool Compare(T lhs, T rhs)
         {
             return EqualityComparer<T>.Default.Equals(lhs, rhs);
         }

@@ -72,7 +72,7 @@ namespace Unity.HLODSystem
             High,
         }
 
-        private FSM<State> m_fsm = new FSM<State>();
+        private HLODTreeNodeFSM m_fsm = new HLODTreeNodeFSM();
         private State m_expectedState = State.Release;
 
         private HLODControllerBase m_controller;
