@@ -28,8 +28,8 @@ namespace Unity.HLODSystem
         }
 
         #endregion
-        
-       
+
+
         public List<HLODControllerBase> ActiveControllers
         {
             get
@@ -42,7 +42,7 @@ namespace Unity.HLODSystem
                     else
                         Camera.onPreCull += OnPreCull;
                 }
-                
+
                 return m_activeControllers;
             }
         }
@@ -54,8 +54,8 @@ namespace Unity.HLODSystem
         {
             ActiveControllers.Remove(controller);
         }
-        
-        
+
+
 
         private List<HLODControllerBase> m_activeControllers = null;
 
@@ -80,8 +80,8 @@ namespace Unity.HLODSystem
                     return;
             }
 #else
-            if (cam != HLODCameraRecognizer.RecognizedCamera)
-                return;
+            if (cam != HLODCameraRecognizerManager.ActiveCamera)
+                    return;
 #endif
 
             if (m_activeControllers == null)
