@@ -40,7 +40,7 @@ namespace Unity.HLODSystem
                         InteractionMode.AutomatedAction);
                 }
 
-                
+
                 var generatedObjects = hlod.GeneratedObjects;
                 for (int i = 0; i < generatedObjects.Count; ++i)
                 {
@@ -67,7 +67,7 @@ namespace Unity.HLODSystem
             {
                 EditorUtility.ClearProgressBar();
             }
-            
+
             EditorUtility.SetDirty(hlod.gameObject);
             EditorUtility.SetDirty(hlod);
         }
@@ -79,7 +79,7 @@ namespace Unity.HLODSystem
             private NativeArray<int> m_detector = new NativeArray<int>(1, Allocator.Persistent);
 
             public float NormalScale => m_normalScale;
-            
+
             public Layer(TerrainLayer layer, float chunkSize)
             {
                 m_diffuseTextures = new DisposableList<WorkingTexture>();
@@ -93,8 +93,14 @@ namespace Unity.HLODSystem
                 m_chunkSize = chunkSize;
 
                 MakeTexture(layer, layer.diffuseTexture, layer.diffuseRemapMin, layer.diffuseRemapMax, m_diffuseTextures);
-                MakeTexture(layer, layer.maskMapTexture, layer.maskMapRemapMin, layer.maskMapRemapMax, m_maskTextures);
-                MakeTexture(layer, layer.normalMapTexture, Vector4.zero, Vector4.one, m_normalTextures);
+                if (layer.maskMapTexture != null)
+                {
+                    MakeTexture(layer, layer.maskMapTexture, layer.maskMapRemapMin, layer.maskMapRemapMax, m_maskTextures);
+                }
+                if (layer.normalMapTexture != null)
+                {
+                    MakeTexture(layer, layer.normalMapTexture, Vector4.zero, Vector4.one, m_normalTextures);
+                }
             }
 
             void MakeTexture(TerrainLayer layer, Texture2D texture, Vector4 min, Vector4 max, DisposableList<WorkingTexture> results)
@@ -159,7 +165,7 @@ namespace Unity.HLODSystem
                     }
                 }
             }
-            
+
             public void Dispose()
             {
                 m_diffuseTextures?.Dispose();
@@ -174,7 +180,7 @@ namespace Unity.HLODSystem
                 v = v - Mathf.Floor(v);
 
                 mipLevel = Mathf.Min(mipLevel, m_diffuseTextures.Count - 1);
-                
+
                 return m_diffuseTextures[mipLevel].GetPixel(u, v);
             }
 
@@ -236,7 +242,7 @@ namespace Unity.HLODSystem
             {
                 int sx = Mathf.Max(source.Width >> 1, 1);
                 int sy = Mathf.Max(source.Height >> 1, 1);
-                
+
                 WorkingTexture mipmap = new WorkingTexture(Allocator.Persistent, source.Format, sx, sy, source.Linear);
                 mipmap.Name = source.Name;
 
@@ -246,7 +252,7 @@ namespace Unity.HLODSystem
                     {
                         Color color = new Color();
 
-                        int x1 = Mathf.Min(x * 2 + 0, source.Width -1);
+                        int x1 = Mathf.Min(x * 2 + 0, source.Width - 1);
                         int x2 = Mathf.Min(x * 2 + 1, source.Width - 1);
                         int y1 = Mathf.Min(y * 2 + 0, source.Height - 1);
                         int y2 = Mathf.Min(y * 2 + 1, source.Height - 1);
@@ -287,7 +293,7 @@ namespace Unity.HLODSystem
             private float m_normalScale;
         }
 
-      
+
 
         private TerrainHLOD m_hlod;
 
@@ -313,10 +319,10 @@ namespace Unity.HLODSystem
 
         private Heightmap CreateSubHightmap(Bounds bounds)
         {
-            int beginX = Mathf.RoundToInt(bounds.min.x / m_size.x * (m_heightmap.Width-1));
-            int beginZ = Mathf.RoundToInt(bounds.min.z / m_size.z * (m_heightmap.Height-1));
-            int endX = Mathf.RoundToInt(bounds.max.x / m_size.x * (m_heightmap.Width-1));
-            int endZ = Mathf.RoundToInt(bounds.max.z / m_size.z * (m_heightmap.Height-1));
+            int beginX = Mathf.RoundToInt(bounds.min.x / m_size.x * (m_heightmap.Width - 1));
+            int beginZ = Mathf.RoundToInt(bounds.min.z / m_size.z * (m_heightmap.Height - 1));
+            int endX = Mathf.RoundToInt(bounds.max.x / m_size.x * (m_heightmap.Width - 1));
+            int endZ = Mathf.RoundToInt(bounds.max.z / m_size.z * (m_heightmap.Height - 1));
 
             int width = endX - beginX + 1;
             int height = endZ - beginZ + 1;
@@ -328,7 +334,7 @@ namespace Unity.HLODSystem
             WorkingObject wo = new WorkingObject(Allocator.Persistent);
             wo.Name = name;
             wo.LightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            
+
             m_queue.EnqueueJob(() =>
             {
                 WorkingMesh mesh = CreateBakedGeometry(name, heightmap, bounds, distance);
@@ -337,7 +343,7 @@ namespace Unity.HLODSystem
 
             m_queue.EnqueueJob(() =>
             {
-                WorkingMaterial material = CreateBakedMaterial(name, bounds, isLeaf); 
+                WorkingMaterial material = CreateBakedMaterial(name, bounds, isLeaf);
                 wo.Materials.Add(material);
             });
 
@@ -349,7 +355,7 @@ namespace Unity.HLODSystem
         {
             int borderWidth = CalcBorderWidth(heightmap, distance);
             int borderWidth2x = borderWidth * 2;
-            
+
             WorkingMesh mesh =
                 new WorkingMesh(Allocator.Persistent, heightmap.Width * heightmap.Height,
                     (heightmap.Width - borderWidth2x - 1) * (heightmap.Height - borderWidth2x - 1) * 6, 1, 0);
@@ -357,7 +363,7 @@ namespace Unity.HLODSystem
             mesh.name = name + "_Mesh";
 
 
-            Vector3[] vertices =  new Vector3[(heightmap.Width - borderWidth2x) * (heightmap.Height - borderWidth2x)];
+            Vector3[] vertices = new Vector3[(heightmap.Width - borderWidth2x) * (heightmap.Height - borderWidth2x)];
             Vector3[] normals = new Vector3[(heightmap.Width - borderWidth2x) * (heightmap.Height - borderWidth2x)];
             Vector2[] uvs = new Vector2[(heightmap.Width - borderWidth2x) * (heightmap.Height - borderWidth2x)];
             int[] triangles = new int[(heightmap.Width - borderWidth2x - 1) * (heightmap.Height - borderWidth2x - 1) * 6];
@@ -365,9 +371,9 @@ namespace Unity.HLODSystem
 
             int vi = 0;
             //except boder line
-            for (int z = borderWidth; z < heightmap.Height -borderWidth; ++z)
+            for (int z = borderWidth; z < heightmap.Height - borderWidth; ++z)
             {
-                for (int x = borderWidth; x < heightmap.Width -borderWidth; ++x)
+                for (int x = borderWidth; x < heightmap.Width - borderWidth; ++x)
                 {
                     int index = vi++;
 
@@ -377,10 +383,10 @@ namespace Unity.HLODSystem
 
                     uvs[index].x = (float)x / (heightmap.Width - 1);
                     uvs[index].y = (float)z / (heightmap.Height - 1);
-                    
+
                     normals[index] = heightmap.GetInterpolatedNormal(uvs[index].x, uvs[index].y);
-                    
-                    
+
+
                 }
             }
 
@@ -389,10 +395,10 @@ namespace Unity.HLODSystem
             {
                 for (int x = 0; x < heightmap.Width - borderWidth2x - 1; ++x)
                 {
-                    int i00 = z * (heightmap.Width -borderWidth2x)+ x;
-                    int i10 = z * (heightmap.Width -borderWidth2x)+ x + 1;
-                    int i01 = (z + 1) * (heightmap.Width -borderWidth2x)+ x;
-                    int i11 = (z + 1) * (heightmap.Width -borderWidth2x)+ x + 1;
+                    int i00 = z * (heightmap.Width - borderWidth2x) + x;
+                    int i10 = z * (heightmap.Width - borderWidth2x) + x + 1;
+                    int i01 = (z + 1) * (heightmap.Width - borderWidth2x) + x;
+                    int i11 = (z + 1) * (heightmap.Width - borderWidth2x) + x + 1;
 
                     triangles[ii + 0] = i00;
                     triangles[ii + 1] = i11;
@@ -540,7 +546,7 @@ namespace Unity.HLODSystem
             albedoTexture.Name = name + "_Albedo";
             albedoTexture.WrapMode = TextureWrapMode.Clamp;
 
-            EnqueueBlendTextureJob(albedoTexture, bounds, resolution, (layer, wx, wz, sx, sz, linear) => 
+            EnqueueBlendTextureJob(albedoTexture, bounds, resolution, (layer, wx, wz, sx, sz, linear) =>
             {
                 Color c = m_layers[layer].GetColorByWorld(wx, wz, sx, sz);
                 if (!linear)
@@ -548,7 +554,7 @@ namespace Unity.HLODSystem
                 return c;
             });
 
-            
+
             return albedoTexture;
         }
 
@@ -580,14 +586,14 @@ namespace Unity.HLODSystem
                 Color c = m_layers[layer].GetNormalByWorld(wx, wz, sx, sz);
                 c = UnPackNormal(c, m_layers[layer].NormalScale);
                 return c;
-            },(c) =>
+            }, (c) =>
             {
                 Vector3 n = new Vector3(c.r, c.g, c.b);
                 n.Normalize();
                 c = new Color(n.x, n.y, n.z);
                 return PackNormal(c);
             });
-            
+
             return normalTexture;
         }
 
@@ -619,7 +625,7 @@ namespace Unity.HLODSystem
                     }
                 }
             }
-            
+
 
             return candidates.ToList();
         }
@@ -635,16 +641,16 @@ namespace Unity.HLODSystem
             //generate border vertices
             List<BorderVertex> borderVertices = new List<BorderVertex>((heightmap.Width + heightmap.Height) * 2);
 
-            int xBorderOffset = Mathf.Max((heightmap.Width - 1) / borderCount, 1 );    //< avoid 0
+            int xBorderOffset = Mathf.Max((heightmap.Width - 1) / borderCount, 1);    //< avoid 0
             int yBorderOffset = Mathf.Max((heightmap.Height - 1) / borderCount, 1);    //< avoid 0
-            
+
             //upside
-            for (int i = 0; i < heightmap.Width-1; i += xBorderOffset)
+            for (int i = 0; i < heightmap.Width - 1; i += xBorderOffset)
             {
                 float h = heightmap[0, i];
 
                 BorderVertex v;
-                v.Pos.x = (heightmap.Size.x * i) / (heightmap.Width-1);
+                v.Pos.x = (heightmap.Size.x * i) / (heightmap.Width - 1);
                 v.Pos.y = (heightmap.Size.y * h);
                 v.Pos.z = 0.0f;
                 v.Pos += heightmap.Offset;
@@ -655,14 +661,14 @@ namespace Unity.HLODSystem
             }
 
             //rightside
-            for (int i = 0; i < heightmap.Height-1; i += yBorderOffset)
+            for (int i = 0; i < heightmap.Height - 1; i += yBorderOffset)
             {
                 float h = heightmap[i, heightmap.Width - 1];
 
                 BorderVertex v;
                 v.Pos.x = heightmap.Size.x;
                 v.Pos.y = (heightmap.Size.y * h);
-                v.Pos.z = (heightmap.Size.z * i) / (heightmap.Height-1);
+                v.Pos.z = (heightmap.Size.z * i) / (heightmap.Height - 1);
                 v.Pos += heightmap.Offset;
 
                 v.ClosestIndex = -1;
@@ -671,12 +677,12 @@ namespace Unity.HLODSystem
             }
 
             //downside
-            for (int i = heightmap.Width-1; i > 0; i -= xBorderOffset)
+            for (int i = heightmap.Width - 1; i > 0; i -= xBorderOffset)
             {
                 float h = heightmap[heightmap.Height - 1, i];
 
                 BorderVertex v;
-                v.Pos.x = (heightmap.Size.x * i) / (heightmap.Width-1);
+                v.Pos.x = (heightmap.Size.x * i) / (heightmap.Width - 1);
                 v.Pos.y = (heightmap.Size.y * h);
                 v.Pos.z = heightmap.Size.z;
                 v.Pos += heightmap.Offset;
@@ -694,7 +700,7 @@ namespace Unity.HLODSystem
                 BorderVertex v;
                 v.Pos.x = 0.0f;
                 v.Pos.y = (heightmap.Size.y * h);
-                v.Pos.z = (heightmap.Size.z * i) / (heightmap.Height-1);
+                v.Pos.z = (heightmap.Size.z * i) / (heightmap.Height - 1);
                 v.Pos += heightmap.Offset;
 
                 v.ClosestIndex = -1;
@@ -704,7 +710,7 @@ namespace Unity.HLODSystem
 
             return borderVertices;
         }
-        
+
 
         private WorkingMesh MakeBorder(WorkingMesh source, Heightmap heightmap, int borderCount)
         {
@@ -721,15 +727,15 @@ namespace Unity.HLODSystem
                 List<Vector2Int> edges = GetEdgeList(tris);
                 HashSet<int> vertexIndces = new HashSet<int>();
                 List<BorderVertex> edgeVertices = new List<BorderVertex>();
-                
+
                 for (int ei = 0; ei < edges.Count; ++ei)
                 {
                     vertexIndces.Add(edges[ei].x);
                     vertexIndces.Add(edges[ei].y);
                 }
-                
+
                 List<BorderVertex> borderVertices = GenerateBorderVertices(heightmap, borderCount);
-                
+
                 //calculate closest vertex from border vertices.
                 for (int i = 0; i < borderVertices.Count; ++i)
                 {
@@ -748,13 +754,13 @@ namespace Unity.HLODSystem
 
                     borderVertices[i] = v;
                 }
-                
+
                 //generate tris
                 int startAddIndex = vertices.Count;
                 for (int bi = 0; bi < borderVertices.Count; ++bi)
                 {
                     int next = (bi == borderVertices.Count - 1) ? 0 : bi + 1;
-                    
+
                     tris.Add(bi + startAddIndex);
                     tris.Add(borderVertices[bi].ClosestIndex);
                     tris.Add(next + startAddIndex);
@@ -763,14 +769,14 @@ namespace Unity.HLODSystem
                     uv.x = (borderVertices[bi].Pos.x - heightmap.Offset.x) / heightmap.Size.x;
                     uv.y = (borderVertices[bi].Pos.z - heightmap.Offset.z) / heightmap.Size.z;
                     vertices.Add(borderVertices[bi].Pos);
-                    
+
                     normals.Add(heightmap.GetInterpolatedNormal(uv.x, uv.y));
-                    
+
                     uvs.Add(uv);
-                    
+
                     if (borderVertices[bi].ClosestIndex == borderVertices[next].ClosestIndex)
                         continue;
-                    
+
                     tris.Add(borderVertices[bi].ClosestIndex);
                     tris.Add(borderVertices[next].ClosestIndex);
                     tris.Add(next + startAddIndex);
@@ -819,31 +825,31 @@ namespace Unity.HLODSystem
                 return 1;
             }
             dynamic options = m_hlod.SimplifierOptions;
-            
+
             int maxPolygonCount = options.SimplifyMaxPolygonCount;
             int minPolygonCount = options.SimplifyMinPolygonCount;
             float polygonRatio = options.SimplifyPolygonRatio;
             int triangleCount = (heightmap.Width - 1) * (heightmap.Height - 1) * 2;
 
-            float maxQuality = Mathf.Min((float) maxPolygonCount / (float) triangleCount, polygonRatio);
-            float minQuality = Mathf.Max((float) minPolygonCount / (float) triangleCount, 0.0f);
-            
+            float maxQuality = Mathf.Min((float)maxPolygonCount / (float)triangleCount, polygonRatio);
+            float minQuality = Mathf.Max((float)minPolygonCount / (float)triangleCount, 0.0f);
+
             var ratio = maxQuality * Mathf.Pow(polygonRatio, distance);
             ratio = Mathf.Max(ratio, minQuality);
 
             int expectPolygonCount = (int)(triangleCount * ratio);
 
-            float areaSize = (heightmap.Size.x * heightmap.Size.z); 
-            float sourceSizePerTri = areaSize/  triangleCount;
+            float areaSize = (heightmap.Size.x * heightmap.Size.z);
+            float sourceSizePerTri = areaSize / triangleCount;
             float targetSizePerTri = areaSize / expectPolygonCount;
             float sizeRatio = targetSizePerTri / sourceSizePerTri;
             float sizeRatioSqrt = Mathf.Sqrt(sizeRatio);
-            
+
             //sizeRatioSqrt is little bit big i think.
             //So I adjust the value by divide 2.
-            return Mathf.Max((int) sizeRatioSqrt / 2, 1);
+            return Mathf.Max((int)sizeRatioSqrt / 2, 1);
         }
-        
+
 
         public class EdgeGroup
         {
@@ -856,13 +862,13 @@ namespace Unity.HLODSystem
         {
             int totalTris = 0;
             List<int[]> newTris = new List<int[]>();
-            
+
             for (int si = 0; si < source.subMeshCount; ++si)
             {
                 List<int> tris = source.GetTriangles(si).ToList();
                 List<Vector2Int> edgeList = GetEdgeList(tris);
-                
-                
+
+
                 List<EdgeGroup> groups = new List<EdgeGroup>();
                 for (int i = 0; i < edgeList.Count; ++i)
                 {
@@ -870,7 +876,7 @@ namespace Unity.HLODSystem
                     group.Begin = edgeList[i].x;
                     group.End = edgeList[i].y;
                     group.EdgeList.Add(edgeList[i]);
-                
+
                     groups.Add(group);
                 }
 
@@ -917,7 +923,7 @@ namespace Unity.HLODSystem
                 for (int gi = 0; gi < groups.Count; ++gi)
                 {
                     EdgeGroup group = groups[gi];
-                    for (int ei1 = 1; ei1 < group.EdgeList.Count-1; ++ei1)
+                    for (int ei1 = 1; ei1 < group.EdgeList.Count - 1; ++ei1)
                     {
                         for (int ei2 = ei1 + 1; ei2 < group.EdgeList.Count; ++ei2)
                         {
@@ -936,7 +942,7 @@ namespace Unity.HLODSystem
                                 {
                                     group.EdgeList.RemoveAt(i);
                                 }
-                                
+
                                 groups.Add(ng);
 
                                 ei1 = 0; // goto first
@@ -948,9 +954,9 @@ namespace Unity.HLODSystem
 
                 if (groups.Count == 0)
                     continue;
-                
+
                 groups.Sort((g1, g2) => { return g2.EdgeList.Count - g1.EdgeList.Count; });
-                
+
                 //first group( longest group ) is outline. 
                 for (int i = 1; i < groups.Count; ++i)
                 {
@@ -961,13 +967,13 @@ namespace Unity.HLODSystem
                         tris.Add(group.EdgeList[ei].y);
                         tris.Add(group.EdgeList[ei].x);
                     }
-                
+
                 }
 
                 totalTris += tris.Count;
                 newTris.Add(tris.ToArray());
             }
-            
+
             WorkingMesh mesh = new WorkingMesh(Allocator.Persistent, source.vertexCount, totalTris, source.subMeshCount, 0);
             mesh.name = source.name;
             mesh.vertices = source.vertices;
@@ -996,7 +1002,7 @@ namespace Unity.HLODSystem
             parentQueue.Enqueue(-1);
             nameQueue.Enqueue("HLOD");
             depthQueue.Enqueue(0);
-            
+
 
             while (trevelQueue.Count > 0)
             {
@@ -1018,12 +1024,12 @@ namespace Unity.HLODSystem
                     nameQueue.Enqueue(name + "_" + (i + 1));
                     depthQueue.Enqueue(depth + 1);
                 }
-                
+
                 info.Heightmap = CreateSubHightmap(node.Bounds);
                 info.WorkingObjects.Add(CreateBakedTerrain(name, node.Bounds, info.Heightmap, depth, node.GetChildCount() == 0));
                 info.Distances.Add(depth);
                 results.Add(info);
-                
+
                 if (depth > maxDepth)
                     maxDepth = depth;
             }
@@ -1040,7 +1046,7 @@ namespace Unity.HLODSystem
 
             return results;
         }
-        
+
         public IEnumerator CreateImpl()
         {
             try
@@ -1252,7 +1258,7 @@ namespace Unity.HLODSystem
             }
         }
 
-        
+
     }
 
 }
