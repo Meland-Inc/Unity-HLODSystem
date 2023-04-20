@@ -14,12 +14,12 @@ namespace Unity.HLODSystem.Utils
         }
     }
 
-    
-    
+
+
     public class WorkingObject : IDisposable
     {
         private NativeArray<int> m_detector = new NativeArray<int>(1, Allocator.Persistent);
-        
+
         private WorkingMesh m_mesh;
         private DisposableList<WorkingMaterial> m_materials;
         private Matrix4x4 m_localToWorld;
@@ -64,7 +64,7 @@ namespace Unity.HLODSystem.Utils
             //clean old data
             m_mesh?.Dispose();
             m_materials?.Dispose();
-            
+
             MeshFilter filter = renderer.GetComponent<MeshFilter>();
             if (filter != null && filter.sharedMesh != null)
             {
@@ -73,7 +73,14 @@ namespace Unity.HLODSystem.Utils
 
             foreach (var mat in renderer.sharedMaterials)
             {
-                m_materials.Add(mat.ToWorkingMaterial(m_allocator));
+                if (mat != null)
+                {
+                    m_materials.Add(mat.ToWorkingMaterial(m_allocator));
+                }
+                else
+                {
+                    Debug.LogError($"HLOD checked material is null,gameObject name:{renderer.gameObject.name}");
+                }
             }
 
             m_localToWorld = renderer.localToWorldMatrix;
@@ -85,13 +92,17 @@ namespace Unity.HLODSystem.Utils
         {
             if (m_mesh == mesh)
                 return;
-            
+
             if (m_mesh != null)
             {
                 m_mesh.Dispose();
                 m_mesh = null;
             }
 
+            if (mesh == null)
+            {
+                Debug.LogError($"HLOD set mesh is null, name:{Name}");
+            }
             m_mesh = mesh;
         }
 
