@@ -20,6 +20,11 @@ namespace Unity.HLODSystem.Simplifier
             for (int i = 0; i < buildInfo.WorkingObjects.Count; ++i)
             {
                 Utils.WorkingMesh mesh = buildInfo.WorkingObjects[i].Mesh;
+                if (mesh == null)
+                {
+                    Debug.LogError($"HLOD simplify mesh error, name:{buildInfo.WorkingObjects[i].Name}");
+                    continue;
+                }
 
                 int triangleCount = mesh.triangles.Length / 3;
                 float maxQuality = Mathf.Min((float)m_options.SimplifyMaxPolygonCount / (float)triangleCount, (float)m_options.SimplifyPolygonRatio);
@@ -28,36 +33,36 @@ namespace Unity.HLODSystem.Simplifier
                 var ratio = maxQuality * Mathf.Pow((float)m_options.SimplifyPolygonRatio, buildInfo.Distances[i]);
                 ratio = Mathf.Max(ratio, minQuality);
 
-                
-//                while (Cache.SimplifiedCache.IsGenerating(GetType(), mesh, ratio) == true)
-//                {
-//                    yield return null;
-//                }
-//                Mesh simplifiedMesh = Cache.SimplifiedCache.Get(GetType(), mesh, ratio);
-//                if (simplifiedMesh == null)
-//                {
-//                    Cache.SimplifiedCache.MarkGenerating(GetType(), mesh, ratio);
-                    yield return GetSimplifiedMesh(mesh, ratio, (m) =>
-                    {
-                        buildInfo.WorkingObjects[i].SetMesh(m);
-                    });
-//                    Cache.SimplifiedCache.Update(GetType(), mesh, simplifiedMesh, ratio);
-                    
-//                }
 
-            }            
+                //                while (Cache.SimplifiedCache.IsGenerating(GetType(), mesh, ratio) == true)
+                //                {
+                //                    yield return null;
+                //                }
+                //                Mesh simplifiedMesh = Cache.SimplifiedCache.Get(GetType(), mesh, ratio);
+                //                if (simplifiedMesh == null)
+                //                {
+                //                    Cache.SimplifiedCache.MarkGenerating(GetType(), mesh, ratio);
+                yield return GetSimplifiedMesh(mesh, ratio, (m) =>
+                {
+                    buildInfo.WorkingObjects[i].SetMesh(m);
+                });
+                //                    Cache.SimplifiedCache.Update(GetType(), mesh, simplifiedMesh, ratio);
+
+                //                }
+
+            }
         }
 
         public void SimplifyImmidiate(HLODBuildInfo buildInfo)
         {
-            
+
             IEnumerator routine = Simplify(buildInfo);
             CustomCoroutine coroutine = new CustomCoroutine(routine);
             while (coroutine.MoveNext())
             {
-                
+
             }
-            
+
         }
 
         protected abstract IEnumerator GetSimplifiedMesh(Utils.WorkingMesh origin, float quality, Action<Utils.WorkingMesh> resultCallback);
@@ -74,7 +79,7 @@ namespace Unity.HLODSystem.Simplifier
                 options.SimplifyMinPolygonCount = 10;
             if (options.SimplifyMaxPolygonCount == null)
                 options.SimplifyMaxPolygonCount = 500;
-            
+
 
             options.SimplifyPolygonRatio = EditorGUILayout.Slider("Polygon Ratio", options.SimplifyPolygonRatio, 0.0f, 1.0f);
             EditorGUILayout.LabelField("Triangle Range");
@@ -85,6 +90,6 @@ namespace Unity.HLODSystem.Simplifier
 
             EditorGUI.indentLevel -= 1;
         }
-        
+
     }
 }
